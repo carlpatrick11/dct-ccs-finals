@@ -104,6 +104,31 @@
         return $error;
     }
 
+    function updateStudent($student_id, $firstname, $lastname) {
+        $con = openCon();
+        
+        
+        $sqlUpdate = "UPDATE students SET first_name = ?, last_name = ? WHERE student_id = ?";
+        
+        if ($stmt = mysqli_prepare($con, $sqlUpdate)) {
+            mysqli_stmt_bind_param($stmt, "sss", $firstname, $lastname, $student_id);
+            
+            if (mysqli_stmt_execute($stmt)) {
+                $success = "Student records updated successfully!";
+            } else {
+                $error = "Error updating student: " . mysqli_error($con);
+            }
+            
+            mysqli_stmt_close($stmt);
+        } else {
+            $error = "Error preparing query: " . mysqli_error($con);
+        }
+        
+        closeCon($con);
+        
+        return isset($success) ? $success : $error;
+    }
+
     function getStudents() {
         $students = [];
         $con = openCon();
@@ -115,6 +140,52 @@
         }
         closeCon($con);
         return $students;
+    }
+
+    function getStudentById($studentId) {
+        $con = openCon();
+        $student = [];
+    
+        $sql = "SELECT student_id, first_name, last_name FROM students WHERE student_id = ?";
+        if ($stmt = mysqli_prepare($con, $sql)) {
+            mysqli_stmt_bind_param($stmt, "s", $studentId);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_bind_result($stmt, $studentId, $firstName, $lastName);
+            if (mysqli_stmt_fetch($stmt)) {
+                $student = [
+                    'id' => $studentId,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName
+                ];
+            }
+            mysqli_stmt_close($stmt);
+        }
+        closeCon($con);
+    
+        return $student; 
+    }
+    
+    
+    function deleteStudentById($studentId) {
+        $con = openCon();
+        $error = '';
+    
+        $sqlDelete = "DELETE FROM students WHERE student_id = ?";
+        if ($deleteStmt = mysqli_prepare($con, $sqlDelete)) {
+            mysqli_stmt_bind_param($deleteStmt, "s", $studentId);
+            if (mysqli_stmt_execute($deleteStmt)) {
+                mysqli_stmt_close($deleteStmt);
+                closeCon($con);
+                return true;  
+            } else {
+                $error = "Error deleting student: " . mysqli_error($con);
+                mysqli_stmt_close($deleteStmt);
+            }
+        } else {
+            $error = "Error query: " . mysqli_error($con);
+        }
+        closeCon($con);
+        return $error;  
     }
 
     function totalStudents() {
