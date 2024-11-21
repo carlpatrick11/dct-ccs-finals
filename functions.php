@@ -70,4 +70,64 @@
         return $error;
     }
 
+
+    function addStudent($id, $firstname, $lastname) {
+        $error = '';
+        
+        if (empty($id)) {
+            $error = "Empty Student ID";
+        } elseif (!is_numeric($id)) {
+            $error = "Invalid Student ID. It must be a number.";
+        } elseif (empty($firstname)) {
+            $error = "Empty First Name";
+        } elseif (empty($lastname)) {
+            $error = "Empty Last Name";
+        } else {
+            $con = openCon();
+            $sqlAdd = "INSERT INTO students (student_id, first_name, last_name) VALUES (?, ?, ?)";
+            if ($stmt = mysqli_prepare($con, $sqlAdd)) {
+                mysqli_stmt_bind_param($stmt, "sss", $id, $firstname, $lastname);
+                if (mysqli_stmt_execute($stmt)) {
+                    $_SESSION['student_success'] = true;
+                    header('Location: ' . $_SERVER['PHP_SELF']); 
+                    exit();
+                } else {
+                    $error = "Error: " . mysqli_error($con);
+                }
+                mysqli_stmt_close($stmt);
+            } else {
+                $error = "Error preparing query: " . mysqli_error($con);
+            }
+            closeCon($con);
+        }
+
+        return $error;
+    }
+
+    function getStudents() {
+        $students = [];
+        $con = openCon();
+        $query = "SELECT student_id, first_name, last_name FROM students";
+        if ($result = mysqli_query($con, $query)) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $students[] = $row;
+            }
+        }
+        closeCon($con);
+        return $students;
+    }
+
+    function totalStudents() {
+        $con = openCon();
+        $sql = "SELECT COUNT(*) AS total_students FROM students";
+        $result = mysqli_query($con, $sql);
+        $total_students = 0;
+        if ($result) {
+            $row = mysqli_fetch_assoc($result);
+            $total_students = $row['total_students'];
+        }
+        closeCon($con);
+        return $total_students;
+    }
+
 ?>
